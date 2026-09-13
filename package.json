@@ -1,0 +1,10 @@
+{
+  "name": "portal-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Portal Lab — MOX AI-first Developer test assignment (Лаборатория нестабильных порталов)",
+  "scripts": {
+    "test": "node --test"
+  }
+}
