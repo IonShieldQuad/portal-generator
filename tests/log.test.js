@@ -23,3 +23,11 @@ test('portalHistory returns only that portal history, in order', () => {
   const history = portalHistory(next, 'a');
   assert.deepEqual(history.map((e) => e.message), ['первый', 'третий']);
 });
+
+test('entries carry the portal name and the loss flag', () => {
+  const state = createGameState(1);
+  const portal = createPortal({ id: 'p1', name: 'Портал «Тест»' });
+  const entry = makeEntry(state, portal, 'injury', 'info', 'Травмировано: 2', -30, { loss: true });
+  assert.equal(entry.portalName, 'Портал «Тест»');
+  assert.equal(entry.loss, true);
+});

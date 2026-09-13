@@ -36,6 +36,7 @@ export function resolveTurn(state) {
             'info',
             stranded > 0 ? `Портал схлопнулся. Потеряно гномов: ${stranded}` : 'Портал схлопнулся',
             -penalty,
+            { loss: stranded > 0 },
           ),
         );
         portals.push({

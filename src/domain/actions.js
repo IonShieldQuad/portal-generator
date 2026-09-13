@@ -209,6 +209,7 @@ const sendIn = {
           ? `Отправлено гномов: ${arrived}. Травмировано в переходе: ${roll.injured}`
           : `Отправлено гномов: ${arrived}`,
         -penalty,
+        { loss: roll.injured > 0 },
       ),
       rng: roll.rng,
     };
@@ -248,6 +249,7 @@ const sendOut = {
           ? `Выведено гномов: ${returned}. Травмировано в переходе: ${roll.injured}`
           : `Выведено гномов: ${returned}`,
         -penalty,
+        { loss: roll.injured > 0 },
       ),
       rng: roll.rng,
     };
@@ -288,7 +290,7 @@ const close = {
         : `Портал закрыт. Возвращено энергии: ${refund}`;
     return {
       state: next,
-      entry: makeEntry(state, portal, ActionId.CLOSE, 'success', message, -penalty),
+      entry: makeEntry(state, portal, ActionId.CLOSE, 'success', message, -penalty, { loss: stranded > 0 }),
       rng: state.rng,
     };
   },

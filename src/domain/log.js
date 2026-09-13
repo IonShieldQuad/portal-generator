@@ -1,6 +1,6 @@
 // Single append-only event stream. Portal history is a filtered view of it.
 
-export function makeEntry(state, portal, action, result, message, scoreDelta = 0) {
+export function makeEntry(state, portal, action, result, message, scoreDelta = 0, extra = {}) {
   return {
     tick: state.tick,
     portalId: portal ? portal.id : null,
@@ -9,6 +9,7 @@ export function makeEntry(state, portal, action, result, message, scoreDelta = 0
     result,
     message,
     scoreDelta,
+    ...extra,
   };
 }
 

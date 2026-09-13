@@ -6,11 +6,18 @@ export function renderLog(state) {
     return '<p class="empty">Действий пока не было.</p>';
   }
   return `<ul class="log-list">
-    ${entries.map((e) => `
-      <li>
+    ${entries.map((e) => {
+      const cls = e.loss ? 'loss' : e.result === 'blocked' ? 'blocked' : '';
+      const portal = e.portalName ?? e.portalId ?? '—';
+      const delta = e.scoreDelta
+        ? `<span class="log-delta mono">${e.scoreDelta > 0 ? '+' : ''}${e.scoreDelta}</span>`
+        : '';
+      return `<li class="${cls}">
         <span class="tick mono">Ход ${e.tick}</span>
-        <span class="${e.result === 'blocked' ? 'blocked' : ''}">${esc(e.message)}</span>
-        ${e.scoreDelta ? `<span class="muted mono">${e.scoreDelta > 0 ? '+' : ''}${e.scoreDelta}</span>` : ''}
-      </li>`).join('')}
+        <span class="log-portal">${esc(portal)}</span>
+        <span class="log-msg">${esc(e.message)}</span>
+        ${delta}
+      </li>`;
+    }).join('')}
   </ul>`;
 }

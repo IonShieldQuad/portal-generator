@@ -314,12 +314,19 @@ dialog::backdrop { background: rgba(4, 2, 12, 0.72); backdrop-filter: blur(2px);
 .risk-bar > i { display: block; height: 100%; background: var(--accent); }
 .history { font-size: 13px; max-height: 180px; overflow-y: auto; padding-left: 18px; }
 .history li { padding: 4px 0; border-bottom: 1px solid #241f47; }
+.history li.loss { color: var(--critical); font-weight: 700; }
 
 /* -------------------------------------------------------------- log etc */
 .log-list { list-style: none; padding: 0; margin: 0; }
-.log-list li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #241f47; font-size: 14px; }
+.log-list li { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid #241f47; font-size: 14px; }
 .log-list .tick { color: var(--muted); min-width: 58px; }
-.log-list .blocked { color: var(--critical); }
+.log-list .log-portal { font-weight: 700; min-width: 150px; }
+.log-list .log-msg { flex: 1; }
+.log-list .log-delta { margin-left: auto; }
+.log-list li.blocked .log-msg { color: var(--critical); }
+.log-list li.loss .log-portal,
+.log-list li.loss .log-msg,
+.log-list li.loss .log-delta { color: var(--critical); font-weight: 700; }
 .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 14px 0; }
 .summary-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
 .summary-card .value { font-size: 24px; font-weight: 800; }

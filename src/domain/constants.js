@@ -59,8 +59,8 @@ export const CONFIG = Object.freeze({
   SCORE_DISTANCE_K: 0.15,
 
   // Penalties
-  STRAND_PENALTY: 15,
-  INJURY_PENALTY: 8,
+  STRAND_PENALTY: 30,
+  INJURY_PENALTY: 15,
   INJURY_RATE: 0.05,
 
   // Risk

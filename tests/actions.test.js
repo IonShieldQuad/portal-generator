@@ -79,7 +79,7 @@ test('closing with gnomes strands them and applies the penalty', () => {
   });
   const result = applyAction(state, 'p', ActionId.CLOSE, { confirm: true });
   assert.equal(result.ok, true);
-  assert.equal(result.state.score, -30);
+  assert.equal(result.state.score, -60);
   assert.equal(result.state.portals[0].gnomes, 0);
   assert.equal(result.state.portals[0].status, 'closed');
 });

@@ -191,7 +191,7 @@ export function renderDetail(state, ui, store) {
       <h2>История</h2>
       <ul class="history">
         ${history.length
-          ? history.map((e) => `<li>Ход ${e.tick}: ${esc(e.message)}${e.result === 'blocked' ? ' <span class="muted">(заблокировано)</span>' : ''}</li>`).join('')
+          ? history.map((e) => `<li class="${e.loss ? 'loss' : ''}">Ход ${e.tick}: ${esc(e.message)}${e.result === 'blocked' ? ' <span class="muted">(заблокировано)</span>' : ''}</li>`).join('')
           : '<li class="muted">Изменений пока не было.</li>'}
       </ul>
     `,
