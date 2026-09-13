@@ -58,6 +58,9 @@ export function renderHud(state, ui) {
         ${unspent > 0 ? `<span class="hud-flag warn" title="Порталов без действия: ${unspent}">⏳ ${unspent}</span>` : ''}
         ${highRisk > 0 ? `<span class="hud-flag danger" title="Порталов с высоким или критическим риском: ${highRisk}">⚠ ${highRisk}</span>` : ''}
       </span>
+      ${overBudget
+        ? `<span class="hud-warn" title="Суммарный приток энергии превышает резерв лаборатории">⚠ Приток ${Math.round(staged)} &gt; резерва ${Math.round(state.energyPool)}</span>`
+        : ''}
       <button class="btn ghost" data-act="autoplay">${autoplayLabel}</button>
       <select class="btn ghost" data-act="interval" aria-label="Интервал автовоспроизведения">
         ${[15, 30, 60].map((s) => `<option value="${s}" ${ui.interval === s ? 'selected' : ''}>${s} с</option>`).join('')}

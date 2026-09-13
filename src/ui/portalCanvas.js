@@ -159,15 +159,26 @@ function drawPortal(ctx, size, v, t) {
     }
   }
 
-  // Gnome motes — drift outward when fading or collapsing.
+  // Gnome motes — drift when fading/collapsing; vibrate when overcharged.
   const count = Math.min(v.gnomes ?? 0, 24);
   const drift = fade * 0.5 + (v.collapsing ? 0.6 : 0);
+  const jitter = glow;
+  const moteFrame = Math.floor(t * 14);
   for (let i = 0; i < count; i += 1) {
     const a = (i / Math.max(1, count)) * Math.PI * 2 + t * 0.6;
     const rr = R * 1.18 * (1 + drift * (0.3 + 0.4 * Math.sin(t * 1.3 + i)));
-    ctx.fillStyle = `hsla(${hue},${sat}%,82%,${(0.85 * (1 - drift * 0.5)).toFixed(2)})`;
+    const jx = (rand01(seed, i * 13 + moteFrame) - 0.5) * jitter * 7;
+    const jy = (rand01(seed, i * 17 + moteFrame + 50) - 0.5) * jitter * 7;
+    const lightness = 82 + jitter * 14;
+    ctx.fillStyle = `hsla(${hue},${sat}%,${lightness}%,${(0.85 * (1 - drift * 0.5)).toFixed(2)})`;
     ctx.beginPath();
-    ctx.arc(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, 1.7, 0, Math.PI * 2);
+    ctx.arc(
+      cx + Math.cos(a) * rr + jx,
+      cy + Math.sin(a) * rr + jy,
+      1.7 + jitter * 0.6,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 }

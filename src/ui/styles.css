@@ -403,6 +403,7 @@ dialog::backdrop { background: rgba(4, 2, 12, 0.72); backdrop-filter: blur(2px);
 .hud-flag { font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; }
 .hud-flag.warn { color: var(--medium); border-color: var(--medium); background: rgba(232, 195, 74, 0.12); }
 .hud-flag.danger { color: var(--critical); border-color: var(--critical); background: rgba(239, 77, 106, 0.16); }
+.hud-warn { font-size: 12px; font-weight: 700; color: var(--critical); border: 1px solid var(--critical); background: rgba(239, 77, 106, 0.16); padding: 5px 10px; border-radius: 8px; max-width: 240px; line-height: 1.3; }
 
 /* ---------------------------------------------------------- about */
 .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }

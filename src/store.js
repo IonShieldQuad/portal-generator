@@ -121,10 +121,8 @@ export function createStore(initialState) {
   function maxEnergize(portalId) {
     const portal = getPortal(state, portalId);
     if (!portal) return 0;
-    return Math.max(
-      0,
-      Math.min(Math.floor(state.energyPool), CONFIG.RESERVES_MAX - Math.floor(portal.reserves)),
-    );
+    const room = Math.floor(CONFIG.RESERVES_MAX - portal.reserves);
+    return Math.max(0, Math.min(Math.floor(state.energyPool), room));
   }
 
   function selectEnergize(portalId, amount, { silent = false } = {}) {
