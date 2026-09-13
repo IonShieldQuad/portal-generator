@@ -98,7 +98,6 @@ export function renderAbout() {
   return `
     <h2>О приложении</h2>
     <p>Мини-игра «Лаборатория нестабильных порталов» — тестовое задание MOX «AI-first Developer 2.0». Ванильный JS, ES-модули, без бэкенда; хостинг — GitHub Pages.</p>
-    <p class="muted">Секреты и токены в коде не хранятся. Тесты: <code>npm test</code> (node --test).</p>
 
     ${renderWorklog()}
 
