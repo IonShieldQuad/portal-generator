@@ -1,6 +1,6 @@
 import { countsByStatus, criticalPortals, assistantsFree, activePortals } from '../domain/game.js';
 import { riskBand, risk } from '../domain/portal.js';
-import { vial } from './components.js';
+import { vial, esc } from './components.js';
 
 function stagedEnergize(state, ui) {
   let total = 0;
@@ -24,16 +24,20 @@ function countUnspent(state, ui) {
   }).length;
 }
 
-export function renderHud(state, ui) {
+export function renderHud(state, ui, store) {
   const counts = countsByStatus(state);
   const critical = criticalPortals(state).length;
   const autoplayLabel = ui.autoplay ? '⏸ Пауза' : '▶ Авто';
 
   const staged = stagedEnergize(state, ui);
   const projectedPool = Math.max(0, state.energyPool - staged);
-  const overBudget = staged > state.energyPool;
   const unspent = countUnspent(state, ui);
   const highRisk = countHighRisk(state);
+
+  const blockers = store ? store.commitBlockers() : [];
+  const blocked = blockers.length > 0;
+  const energyBlocked = blockers.some((b) => b.kind === 'energy');
+  const blockerTitle = blockers.map((b) => `${b.portalName}: ${b.reason}`).join('\n');
 
   const poolValue = staged > 0
     ? `${Math.round(state.energyPool)} <span class="muted">→</span> <b class="num">${Math.round(projectedPool)}</b>`
@@ -42,7 +46,7 @@ export function renderHud(state, ui) {
   return `
     <div class="hud-stat"><span class="label">Очки</span><span class="value">${Math.round(state.score)}</span></div>
     <div class="hud-stat"><span class="label">Ход</span><span class="value">${state.tick}</span></div>
-    <div class="hud-pool">
+    <div class="hud-pool ${energyBlocked ? 'bad' : ''}">
       ${vial(state.energyPool, { kind: 'pool', max: state.poolMax, title: 'Резерв лаборатории', preview: staged > 0 ? projectedPool : null })}
       <div class="hud-stat">
         <span class="label">Резерв лаборатории</span>
@@ -58,14 +62,12 @@ export function renderHud(state, ui) {
         ${unspent > 0 ? `<span class="hud-flag warn" title="Порталов без действия: ${unspent}">⏳ ${unspent}</span>` : ''}
         ${highRisk > 0 ? `<span class="hud-flag danger" title="Порталов с высоким или критическим риском: ${highRisk}">⚠ ${highRisk}</span>` : ''}
       </span>
-      ${overBudget
-        ? `<span class="hud-warn" title="Суммарный приток энергии превышает резерв лаборатории">⚠ Приток ${Math.round(staged)} &gt; резерва ${Math.round(state.energyPool)}</span>`
-        : ''}
+      ${blocked ? `<span class="hud-warn" title="${esc(blockerTitle)}">⚠ Ход не готов: ${blockers.length}</span>` : ''}
       <button class="btn ghost" data-act="autoplay">${autoplayLabel}</button>
       <select class="btn ghost" data-act="interval" aria-label="Интервал автовоспроизведения">
         ${[15, 30, 60].map((s) => `<option value="${s}" ${ui.interval === s ? 'selected' : ''}>${s} с</option>`).join('')}
       </select>
-      <button class="btn primary" data-act="advance" ${overBudget ? 'disabled title="Приток энергии превышает резерв лаборатории"' : ''}>Следующий ход</button>
+      <button class="btn primary" data-act="advance" ${blocked ? `disabled title="${esc(blockerTitle)}"` : ''}>Следующий ход</button>
       <button class="btn ghost" data-act="new-game">Новая игра</button>
     </div>
   `;

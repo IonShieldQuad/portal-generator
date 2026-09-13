@@ -54,3 +54,45 @@ test('a staged action is applied at commit', () => {
   assert.ok(portal.stability > 50);
   assert.ok(store.getState().log.some((e) => e.message.includes('стабилизирован')));
 });
+
+test('commit blockers report energy that cannot be paid across portals', () => {
+  const state = createGameState(1, {
+    energyPool: 60,
+    portals: [
+      createPortal({ id: 'a', reserves: 0, stability: 50 }),
+      createPortal({ id: 'b', reserves: 0, stability: 50 }),
+    ],
+  });
+  const store = createStore(state);
+  store.selectAction('a', ActionId.STABILIZE);
+  store.selectAction('b', ActionId.STABILIZE);
+  const blockers = store.commitBlockers();
+  assert.equal(blockers.length, 1);
+  assert.equal(blockers[0].portalId, 'b');
+  assert.equal(blockers[0].kind, 'energy');
+});
+
+test('commit blockers account for close refunds', () => {
+  const state = createGameState(1, {
+    energyPool: 0,
+    portals: [
+      createPortal({ id: 'a', reserves: 100, gnomes: 0, stability: 50 }),
+      createPortal({ id: 'b', reserves: 0, stability: 50 }),
+    ],
+  });
+  const store = createStore(state);
+  store.selectAction('a', ActionId.CLOSE, { confirm: true });
+  store.selectAction('b', ActionId.STABILIZE);
+  assert.deepEqual(store.commitBlockers(), []);
+});
+
+test('advanceTurn refuses when the staged turn is not committable', () => {
+  const state = createGameState(1, {
+    energyPool: 0,
+    portals: [createPortal({ id: 'a', reserves: 0, stability: 50 })],
+  });
+  const store = createStore(state);
+  store.selectAction('a', ActionId.STABILIZE);
+  store.advanceTurn();
+  assert.equal(store.getState().tick, 0);
+});

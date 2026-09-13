@@ -279,18 +279,39 @@ export function createStore(initialState) {
     notify();
   }
 
-  function stagedEnergizeTotal() {
-    let total = 0;
+  function blockerFor(portal, reason) {
+    return {
+      portalId: portal.id,
+      portalName: portal.name,
+      reason,
+      kind: reason.includes('энерг') ? 'energy' : 'other',
+    };
+  }
+
+  // Replay the staged turn on a throwaway copy to find any action that would fail.
+  function commitBlockers() {
+    let s = state;
+    const blocked = [];
     for (const portal of state.portals) {
       const pending = ui.pending[portal.id];
-      if (pending?.energize) total += pending.energize;
+      if (!pending) continue;
+      if (pending.energize > 0) {
+        const result = applyAction(s, portal.id, ActionId.ENERGIZE, { amount: pending.energize });
+        if (!result.ok) blocked.push(blockerFor(portal, result.entry.message));
+        s = result.state;
+      }
+      const actionId = pending.action ?? ActionId.REVIEW;
+      const result = applyAction(s, portal.id, actionId, pending.params ?? {});
+      if (!result.ok) blocked.push(blockerFor(portal, result.entry.message));
+      s = result.state;
     }
-    return total;
+    return blocked;
   }
 
   function advanceTurn() {
-    if (stagedEnergizeTotal() > state.energyPool) {
-      showToast('Приток энергии превышает резерв лаборатории', 'warn', { duration: 4000 });
+    const blockers = commitBlockers();
+    if (blockers.length > 0) {
+      showToast(`${blockers[0].portalName}: ${blockers[0].reason}`, 'warn', { duration: 4000 });
       return;
     }
     if (!ui.skipWarning) {
@@ -305,6 +326,13 @@ export function createStore(initialState) {
   }
 
   function confirmAdvance() {
+    const blockers = commitBlockers();
+    if (blockers.length > 0) {
+      ui = { ...ui, warning: null };
+      showToast(`${blockers[0].portalName}: ${blockers[0].reason}`, 'warn', { duration: 4000 });
+      notify();
+      return;
+    }
     ui = { ...ui, warning: null };
     commit();
   }
@@ -435,6 +463,7 @@ export function createStore(initialState) {
     getUi,
     getPending,
     maxEnergize,
+    commitBlockers,
     preview,
     selectAction,
     selectEnergize,

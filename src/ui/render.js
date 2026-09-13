@@ -101,7 +101,7 @@ export function createRenderer(store, root) {
     const state = store.getState();
     const ui = store.getUi();
 
-    hud.innerHTML = renderHud(state, ui);
+    hud.innerHTML = renderHud(state, ui, store);
     tabs.querySelectorAll('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === ui.tab));
     view.innerHTML = renderView(state, ui, store);
 

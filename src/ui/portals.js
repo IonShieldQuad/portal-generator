@@ -64,7 +64,7 @@ function tuneButton(portalId, pending, check, step, label) {
   });
 }
 
-export function portalRow(portal, state, ui, store) {
+export function portalRow(portal, state, ui, store, blockerReason = '') {
   const v = visualState(portal);
   const pending = store.getPending(portal.id);
   const preview = store.preview(portal.id);
@@ -213,6 +213,7 @@ export function portalRow(portal, state, ui, store) {
 
       <div class="row-actions">
         ${previewLine(preview)}
+        ${blockerReason ? `<p class="row-block">⚠ ${esc(blockerReason)}</p>` : ''}
         ${actionTable}
       </div>
     </article>
@@ -223,13 +224,14 @@ export function renderPortals(state, ui, store) {
   if (state.portals.length === 0) {
     return '<p class="empty">Порталов пока нет. Новые открываются сами — следите за лабораторией.</p>';
   }
+  const blockerMap = new Map((store.commitBlockers?.() ?? []).map((b) => [b.portalId, b.reason]));
   const active = state.portals.filter((p) => p.status !== 'closed' && p.status !== 'collapsed');
   const terminal = state.portals.filter((p) => p.status === 'closed' || p.status === 'collapsed');
   return `
     <div class="portal-list">
-      ${active.map((p) => portalRow(p, state, ui, store)).join('')}
+      ${active.map((p) => portalRow(p, state, ui, store, blockerMap.get(p.id))).join('')}
     </div>
     ${terminal.length ? `<h2 style="margin-top:24px">Закрытые и схлопнувшиеся</h2>
-      <div class="portal-list">${terminal.map((p) => portalRow(p, state, ui, store)).join('')}</div>` : ''}
+      <div class="portal-list">${terminal.map((p) => portalRow(p, state, ui, store, blockerMap.get(p.id))).join('')}</div>` : ''}
   `;
 }
