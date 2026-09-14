@@ -1,4 +1,4 @@
-import { riskBreakdown, throughput, predictedTimeToCollapse, risk } from '../domain/portal.js';
+import { riskBreakdown, throughput, predictedTimeToCollapse, risk, recommendedAction } from '../domain/portal.js';
 import { portalHistory } from '../domain/log.js';
 import { canApply, ActionId } from '../domain/actions.js';
 import { visualState, BAND_LABEL, STATUS_LABEL } from './visual.js';
@@ -16,6 +16,15 @@ import {
   actionButton,
   collapseChip,
 } from './components.js';
+
+const RECOMMENDATION_LABEL = {
+  'stabilize-or-evacuate': 'Стабилизировать или срочно вывести гномов',
+  'evacuate-and-stabilize': 'Вывести гномов и стабилизировать',
+  energize: 'Энергизовать',
+  tune: 'Настроить коэффициент',
+  'send-in': 'Отправить гномов',
+  review: 'Оставить под наблюдением',
+};
 
 function proj(label, a, b) {
   const changed = Math.abs(a - b) >= 0.5;
@@ -41,6 +50,7 @@ export function renderDetail(state, ui, store) {
   const check = (id, params = {}) => canApply(state, portal.id, id, params);
   const assistant = portal.assistant;
   const energizeMax = store.maxEnergize(portal.id);
+  const recommendation = recommendedAction(portal);
 
   const part = (label, value) => `
     <div class="risk-part">
@@ -173,18 +183,20 @@ export function renderDetail(state, ui, store) {
         <div class="detail-stat"><span class="muted">До схлопывания</span>${num(predictedTimeToCollapse(portal))}</div>
       </div>
 
+      <p class="recommend">Рекомендация: <b>${recommendation ? RECOMMENDATION_LABEL[recommendation] : '—'}</b></p>
+
       <h2>Действия</h2>
       ${previewBlock}
       ${preview && preview.blocked ? `<p class="delta down">Недоступно: ${esc(preview.blocked)}</p>` : ''}
       ${actions}
 
       <h2>Расчёт риска</h2>
-      <p class="muted">risk = 0.35·стабильность + 0.25·коэф + 0.20·резервы + 0.20·время</p>
+      <p class="muted">risk = 0.30·(100−стабильность) + 0.20·мин(100, 1.5·|коэф−опт|) + 0.15·(100−резервы) + 0.35·(100−8·время). Порог по времени: &lt;3 ходов — критический, &lt;5 — высокий.</p>
       <div class="risk-parts">
-        ${part('Нестабильность (35%)', breakdown.rS)}
-        ${part('Отклонение коэф. (25%)', breakdown.rC)}
-        ${part('Нехватка энергии (20%)', breakdown.rR)}
-        ${part('Мало времени (20%)', breakdown.rT)}
+        ${part('Нестабильность (30%)', breakdown.rS)}
+        ${part('Отклонение коэф. (20%)', breakdown.rC)}
+        ${part('Нехватка энергии (15%)', breakdown.rR)}
+        ${part('Мало времени (35%)', breakdown.rT)}
       </div>
       <p>Итоговый риск: ${num(breakdown.risk)} (${BAND_LABEL[breakdown.band]})</p>
 

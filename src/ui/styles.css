@@ -413,6 +413,7 @@ dialog::backdrop { background: rgba(4, 2, 12, 0.72); backdrop-filter: blur(2px);
 .hud-warn { font-size: 12px; font-weight: 700; color: var(--critical); border: 1px solid var(--critical); background: rgba(239, 77, 106, 0.16); padding: 5px 10px; border-radius: 8px; max-width: 240px; line-height: 1.3; }
 .hud-pool.bad { outline: 2px solid var(--critical); outline-offset: 3px; border-radius: 10px; }
 .row-block { margin: 6px 0 0; font-size: 13px; font-weight: 700; color: var(--critical); }
+.recommend { margin: 10px 0; font-size: 14px; }
 
 /* ---------------------------------------------------------- about */
 .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }

@@ -107,7 +107,7 @@ export function renderAbout() {
     <ul class="attention">${items}</ul>
 
     <h2>Автотесты</h2>
-    <p class="muted">${TEST_FILES.length} файлов, 53 теста. Запуск: <code>npm test</code>.</p>
+    <p class="muted">${TEST_FILES.length} файлов, 57 тестов. Запуск: <code>npm test</code>.</p>
     ${list(TEST_FILES)}
   `;
 }
