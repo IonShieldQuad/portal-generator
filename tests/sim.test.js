@@ -50,6 +50,7 @@ test('an unsaved collapsing portal collapses and strands its gnomes', () => {
   const portal = state.portals.find((p) => p.id === 'p');
   assert.equal(portal.status, 'collapsed');
   assert.equal(portal.gnomes, 0);
+  assert.equal(portal.gnomesLost, 3);
   assert.ok(state.score <= -45);
 });
 

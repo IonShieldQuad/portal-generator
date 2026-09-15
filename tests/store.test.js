@@ -36,6 +36,31 @@ test('energize is staged separately and included in the preview', () => {
   assert.equal(preview.after.reserves, 70);
 });
 
+test('overcharged send preview projects the expected arrival and a capped injury note', () => {
+  const state = createGameState(1, {
+    portals: [createPortal({ id: 'p1', distance: 5, coefficient: 80, reserves: 50, stability: 60, gnomes: 2 })],
+    idleGnomes: 10,
+  });
+  const store = createStore(state);
+  store.selectAction('p1', ActionId.SEND_IN, { amount: 4 });
+  const preview = store.preview('p1');
+  assert.equal(preview.before.gnomes, 2);
+  assert.equal(preview.after.gnomes, 5);
+  assert.match(preview.note, /25%/);
+  assert.equal(store.getState().portals[0].gnomes, 2);
+});
+
+test('attemptAction logs a blocked entry and surfaces the reason', () => {
+  const state = createGameState(1, { portals: [createPortal({ id: 'p1', status: 'closed' })] });
+  const store = createStore(state);
+  store.attemptAction('p1', ActionId.STABILIZE);
+  const log = store.getState().log;
+  assert.equal(log.length, 1);
+  assert.equal(log[0].result, 'blocked');
+  assert.ok(store.getUi().toast, 'expected a toast');
+  assert.equal(store.getState().portals[0].status, 'closed');
+});
+
 test('advanceTurn warns when portals are untouched, then commits on confirm', () => {
   const store = makeStore();
   store.advanceTurn();

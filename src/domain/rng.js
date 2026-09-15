@@ -22,8 +22,11 @@ export function randInt(rng, min, max) {
   return { value: min + Math.floor(value * span), rng: next };
 }
 
-// True with the given probability.
+// True with the given probability. Probabilities are clamped to [0, 1] so an
+// out-of-range value behaves predictably (never or always) instead of relying
+// on the comparison happening to be true.
 export function chance(rng, probability) {
+  const p = probability <= 0 ? 0 : probability >= 1 ? 1 : probability;
   const { value, rng: next } = nextRandom(rng);
-  return { value: value < probability, rng: next };
+  return { value: value < p, rng: next };
 }

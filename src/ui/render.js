@@ -19,6 +19,7 @@ const TABS = [
 function shell() {
   return `
     <div class="app">
+      <div class="banner warn" id="load-error" hidden></div>
       <header>
         <h1>Лаборатория нестабильных порталов</h1>
         <p class="muted">Смотритель управляет порталами, энергией и гномами.</p>
@@ -92,6 +93,7 @@ export function createRenderer(store, root) {
   const onboardingDialog = root.querySelector('#onboarding-dialog');
   root.querySelector('#onboarding-body').innerHTML = renderOnboarding();
   const toasts = root.querySelector('#toasts');
+  const loadError = root.querySelector('#load-error');
 
   let updating = false;
 
@@ -104,6 +106,15 @@ export function createRenderer(store, root) {
     hud.innerHTML = renderHud(state, ui, store);
     tabs.querySelectorAll('.tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === ui.tab));
     view.innerHTML = renderView(state, ui, store);
+
+    if (ui.loadError) {
+      loadError.hidden = false;
+      loadError.innerHTML = `<span>Сохранение повреждено — начата новая игра.</span>
+        <button class="btn ghost" data-act="dismiss-load-error">Понятно</button>`;
+    } else {
+      loadError.hidden = true;
+      loadError.innerHTML = '';
+    }
 
     const detail = renderDetail(state, ui, store);
     if (detail) {
@@ -165,6 +176,11 @@ export function createRenderer(store, root) {
         store.selectAction(portalId, el.dataset.action, params);
         break;
       }
+      case 'attempt': {
+        const params = el.dataset.params ? JSON.parse(el.dataset.params) : {};
+        store.attemptAction(portalId, el.dataset.action, params);
+        break;
+      }
       case 'pip':
         store.selectAction(portalId, el.dataset.kind, { amount: Number(el.dataset.value) }, { toggle: false });
         break;
@@ -195,6 +211,9 @@ export function createRenderer(store, root) {
         break;
       case 'dismiss-toast':
         store.dismissToast();
+        break;
+      case 'dismiss-load-error':
+        store.dismissLoadError();
         break;
       case 'preset':
         store.loadPreset(el.dataset.preset);

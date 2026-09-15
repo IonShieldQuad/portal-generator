@@ -8,15 +8,24 @@ export function saveState(state) {
   }
 }
 
+// Returns { state, corrupt }. A missing save is not an error (corrupt: false);
+// a save that exists but cannot be parsed/shaped is (corrupt: true).
 export function loadState() {
+  let raw;
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return null;
-    const state = JSON.parse(raw);
-    if (!state || state.version !== 1 || !Array.isArray(state.portals)) return null;
-    return state;
+    raw = localStorage.getItem(SAVE_KEY);
   } catch {
-    return null;
+    return { state: null, corrupt: false };
+  }
+  if (!raw) return { state: null, corrupt: false };
+  try {
+    const state = JSON.parse(raw);
+    if (!state || state.version !== 1 || !Array.isArray(state.portals)) {
+      return { state: null, corrupt: true };
+    }
+    return { state, corrupt: false };
+  } catch {
+    return { state: null, corrupt: true };
   }
 }
 

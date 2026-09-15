@@ -10,6 +10,8 @@ import {
   coefficientDriftMax,
   predictedTimeToCollapse,
   stabilityDelta,
+  coefficientSafe,
+  injuryProbability,
 } from '../src/domain/portal.js';
 
 function base(overrides = {}) {
@@ -71,6 +73,21 @@ test('high energy improves stability regen', () => {
   const low = createPortal({ distance: 5, coefficient: 55, stability: 50, reserves: 50 });
   const high = createPortal({ distance: 5, coefficient: 55, stability: 50, reserves: 100 });
   assert.ok(stabilityDelta(high) > stabilityDelta(low));
+});
+
+test('injury probability is zero at or below the safe coefficient', () => {
+  const safePortal = createPortal({ distance: 5, coefficient: coefficientSafe(createPortal({ distance: 5 })) });
+  assert.equal(injuryProbability(safePortal), 0);
+  assert.equal(injuryProbability(createPortal({ distance: 5, coefficient: 10 })), 0);
+});
+
+test('injury probability grows with overcharge and is capped at 1', () => {
+  const mild = injuryProbability(createPortal({ distance: 5, coefficient: 80 }));
+  const worse = injuryProbability(createPortal({ distance: 5, coefficient: 90 }));
+  const extreme = injuryProbability(createPortal({ distance: 5, coefficient: 100 }));
+  assert.ok(mild > 0 && mild < 1);
+  assert.ok(worse > mild);
+  assert.equal(extreme, 1);
 });
 
 test('low time to collapse forces a very high risk', () => {

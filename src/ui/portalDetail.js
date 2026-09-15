@@ -73,7 +73,16 @@ export function renderDetail(state, ui, store) {
   const sendOutSel = pending.action === ActionId.SEND_OUT;
 
   const actions = terminal
-    ? '<p class="muted">Портал закрыт — действия недоступны.</p>'
+    ? `<p class="muted">Портал ${STATUS_LABEL[portal.status]} — действия недоступны. Нажмите, чтобы увидеть причину.</p>
+      <div class="action-table">
+        <span class="at-label">Проверить</span>
+        <div class="at-cell">
+          ${actionButton(portal.id, ActionId.STABILIZE, 'Стабилизировать', { attempt: true, tooltip: 'Проверить: портал недоступен' })}
+          ${actionButton(portal.id, ActionId.SEND_IN, 'Отправить', { attempt: true, params: { amount: 1 }, tooltip: 'Проверить: портал недоступен' })}
+          ${actionButton(portal.id, ActionId.TUNE, 'Настроить +', { attempt: true, params: { step: '+' }, tooltip: 'Проверить: портал недоступен' })}
+          ${actionButton(portal.id, ActionId.CLOSE, 'Закрыть', { attempt: true, params: { confirm: true }, variant: 'danger', tooltip: 'Проверить: портал недоступен' })}
+        </div>
+      </div>`
     : `
       <div class="action-table">
         <span class="at-label">Ресурсы</span>
@@ -157,10 +166,17 @@ export function renderDetail(state, ui, store) {
     body: `
       <div class="row-badges">
         ${badge(STATUS_LABEL[portal.status], `status-${portal.status}`)}
-        ${badge(`риск ${v.risk} · ${BAND_LABEL[v.band]}`, `band-${v.band}`)}
+        ${terminal ? '' : badge(`риск ${v.risk} · ${BAND_LABEL[v.band]}`, `band-${v.band}`)}
       </div>
-      <p class="muted">${esc(portal.destinationWorld)} · дистанция ${num(portal.distance)} · ${collapseChip(v.timeToCollapse, v.urgency)}</p>
+      <p class="muted">${esc(portal.destinationWorld)} · дистанция ${num(portal.distance)}${terminal ? '' : ` · ${collapseChip(v.timeToCollapse, v.urgency)}`}</p>
 
+      ${terminal ? `
+      <div class="detail-grid">
+        <div class="detail-stat"><span class="muted">Коэффициент Мерлина</span>${num(0)}</div>
+        <div class="detail-stat"><span class="muted">Энергия</span>${num(0)}</div>
+        <div class="detail-stat"><span class="muted">Стабильность</span>${num(0)}</div>
+        <div class="detail-stat"><span class="muted">Потеряно гномов</span>${num(portal.gnomesLost ?? 0)}</div>
+      </div>` : `
       <div class="detail-portal">
         <canvas class="portal-canvas" width="180" height="180" aria-label="Анимация портала"></canvas>
         <div class="detail-gauges">
@@ -183,22 +199,22 @@ export function renderDetail(state, ui, store) {
         <div class="detail-stat"><span class="muted">До схлопывания</span>${num(predictedTimeToCollapse(portal))}</div>
       </div>
 
-      <p class="recommend">Рекомендация: <b>${recommendation ? RECOMMENDATION_LABEL[recommendation] : '—'}</b></p>
+      <p class="recommend">Рекомендация: <b>${recommendation ? RECOMMENDATION_LABEL[recommendation] : '—'}</b></p>`}
 
       <h2>Действия</h2>
       ${previewBlock}
       ${preview && preview.blocked ? `<p class="delta down">Недоступно: ${esc(preview.blocked)}</p>` : ''}
       ${actions}
 
-      <h2>Расчёт риска</h2>
-      <p class="muted">risk = 0.30·(100−стабильность) + 0.20·мин(100, 1.5·|коэф−опт|) + 0.15·(100−резервы) + 0.35·(100−8·время). Порог по времени: &lt;3 ходов — критический, &lt;5 — высокий.</p>
+      ${terminal ? '' : `<h2>Расчёт риска</h2>
+      <p class="muted">risk = 0.30·(100−стабильность) + 0.20·мин(100, 1.5·|коэф−опт|) + 0.15·(100−резервы) + 0.35·(100−8·время). Порог по времени: &lt;3 ходов — критический, &lt;5 — высокий, &lt;8 — средний.</p>
       <div class="risk-parts">
         ${part('Нестабильность (30%)', breakdown.rS)}
         ${part('Отклонение коэф. (20%)', breakdown.rC)}
         ${part('Нехватка энергии (15%)', breakdown.rR)}
         ${part('Мало времени (35%)', breakdown.rT)}
       </div>
-      <p>Итоговый риск: ${num(breakdown.risk)} (${BAND_LABEL[breakdown.band]})</p>
+      <p>Итоговый риск: ${num(breakdown.risk)} (${BAND_LABEL[breakdown.band]})</p>`}
 
       <h2>История</h2>
       <ul class="history">

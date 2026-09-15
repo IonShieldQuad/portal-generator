@@ -94,7 +94,15 @@ export function portalRow(portal, state, ui, store, blockerReason = '') {
     : '';
 
   const actionTable = v.terminal
-    ? '<p class="muted">Портал закрыт — действия недоступны.</p>'
+    ? `<div class="action-table">
+        <span class="at-label">Действия</span>
+        <div class="at-cell">
+          <span class="muted">Портал ${STATUS_LABEL[portal.status]} — действия недоступны. Нажмите, чтобы увидеть причину.</span>
+          ${actionButton(portal.id, ActionId.STABILIZE, 'Стабилизировать', { attempt: true, tooltip: 'Проверить: портал недоступен' })}
+          ${actionButton(portal.id, ActionId.SEND_IN, 'Отправить', { attempt: true, params: { amount: 1 }, tooltip: 'Проверить: портал недоступен' })}
+          ${actionButton(portal.id, ActionId.TUNE, 'Настроить +', { attempt: true, params: { step: '+' }, tooltip: 'Проверить: портал недоступен' })}
+        </div>
+      </div>`
     : `
       <div class="action-table">
         <span class="at-label">Ресурсы</span>
@@ -165,50 +173,71 @@ export function portalRow(portal, state, ui, store, blockerReason = '') {
         </div>
       </div>`;
 
+  const statsInner = v.terminal
+    ? `
+      <div class="row-head">
+        <div class="row-title">
+          <h3>${esc(portal.name)}</h3>
+          <div class="row-badges">${badge(STATUS_LABEL[portal.status], `status-${portal.status}`)}</div>
+        </div>
+        <div class="row-head-right">
+          <button class="act small" data-act="detail" data-portal="${portal.id}" title="${esc(TIP.detail)}">Подробнее</button>
+        </div>
+      </div>
+      <div class="row-meta">${esc(portal.destinationWorld)} · дистанция ${num(portal.distance)}</div>
+      <div class="row-field">
+        <span class="label">Коэффициент Мерлина</span>
+        ${num(0)}
+      </div>
+      <div class="row-field">
+        <span class="label">Потеряно гномов</span>
+        ${num(portal.gnomesLost ?? 0)}
+      </div>`
+    : `
+      <div class="row-head">
+        <div class="row-title">
+          <h3>${esc(portal.name)}</h3>
+          <div class="row-badges">
+            ${badge(STATUS_LABEL[portal.status], `status-${portal.status}`)}
+            ${badge(`риск ${v.risk} · ${BAND_LABEL[v.band]}`, `band-${v.band}`)}
+          </div>
+        </div>
+        <div class="row-head-right">
+          ${radialGauge(v.risk, v.band, { preview: projectedRisk })}
+          <button class="act small" data-act="detail" data-portal="${portal.id}" title="${esc(TIP.detail)}">Подробнее</button>
+        </div>
+      </div>
+
+      <div class="row-meta">
+        ${esc(portal.destinationWorld)} · дистанция ${num(portal.distance)} · ${collapseChip(v.timeToCollapse, v.urgency)}
+      </div>
+
+      <div class="row-field">
+        <span class="label">Коэффициент Мерлина</span>
+        ${bandGauge(portal.coefficient, v.coefficientOptimum, v.coefficientSafe, { preview: coefficientPreview, previewRange: coefficientRange })}
+        ${num(portal.coefficient)} <span class="muted">/ опт ${num(v.coefficientOptimum)}</span>
+      </div>
+      <div class="row-field">
+        <span class="label">Гномы</span>
+        ${num(portal.gnomes)} <span class="muted">внутри · ${num(capacity)} гномов/ход${assistant ? ' · ассистент' : ''}</span>
+      </div>
+      <div class="row-field">
+        <span class="label">Стабильность</span>
+        ${trend(v)} <span class="muted">· энергия ${num(-v.upkeep)}/ход</span>
+      </div>`;
+
   return `
-    <article class="portal-row band-${v.band} ${v.collapsing ? 'collapsing' : ''} ${v.terminal ? 'terminal' : ''}">
+    <article class="portal-row ${v.terminal ? '' : `band-${v.band}`} ${v.collapsing ? 'collapsing' : ''} ${v.terminal ? 'terminal' : ''}">
       <div class="row-main">
         <div class="row-image-wrap">
           ${portalImage(v, { size: 104 })}
-          <div class="row-image-pips">${gnomePips(portal.gnomes)}</div>
+          <div class="row-image-pips">${gnomePips(v.terminal ? (portal.gnomesLost ?? 0) : portal.gnomes)}</div>
         </div>
         <div class="row-vials">
-          ${vial(portal.reserves, { kind: 'mana', title: 'Энергия (резервы)', preview: projected ? projected.reserves : null })}
-          ${crystalColumn(portal.stability, { preview: projected ? projected.stability : null })}
+          ${vial(v.terminal ? 0 : portal.reserves, { kind: 'mana', title: 'Энергия (резервы)', preview: projected ? projected.reserves : null })}
+          ${crystalColumn(v.terminal ? 0 : portal.stability, { preview: projected ? projected.stability : null })}
         </div>
-        <div class="row-stats">
-          <div class="row-head">
-            <div class="row-title">
-              <h3>${esc(portal.name)}</h3>
-              <div class="row-badges">
-                ${badge(STATUS_LABEL[portal.status], `status-${portal.status}`)}
-                ${badge(`риск ${v.risk} · ${BAND_LABEL[v.band]}`, `band-${v.band}`)}
-              </div>
-            </div>
-            <div class="row-head-right">
-              ${radialGauge(v.risk, v.band, { preview: projectedRisk })}
-              <button class="act small" data-act="detail" data-portal="${portal.id}" title="${esc(TIP.detail)}">Подробнее</button>
-            </div>
-          </div>
-
-          <div class="row-meta">
-            ${esc(portal.destinationWorld)} · дистанция ${num(portal.distance)} · ${collapseChip(v.timeToCollapse, v.urgency)}
-          </div>
-
-          <div class="row-field">
-            <span class="label">Коэффициент Мерлина</span>
-            ${bandGauge(portal.coefficient, v.coefficientOptimum, v.coefficientSafe, { preview: coefficientPreview, previewRange: coefficientRange })}
-            ${num(portal.coefficient)} <span class="muted">/ опт ${num(v.coefficientOptimum)}</span>
-          </div>
-          <div class="row-field">
-            <span class="label">Гномы</span>
-            ${num(portal.gnomes)} <span class="muted">внутри · ${num(capacity)} гномов/ход${assistant ? ' · ассистент' : ''}</span>
-          </div>
-          <div class="row-field">
-            <span class="label">Стабильность</span>
-            ${trend(v)} <span class="muted">· энергия ${num(-v.upkeep)}/ход</span>
-          </div>
-        </div>
+        <div class="row-stats">${statsInner}</div>
       </div>
 
       <div class="row-actions">

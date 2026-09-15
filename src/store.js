@@ -4,7 +4,7 @@ import { createPortal } from './domain/portal.js';
 import { resolveTurn } from './domain/sim.js';
 import { applyAction, canApply, ActionId } from './domain/actions.js';
 import { getPortal } from './domain/game.js';
-import { isActive, risk, coefficientSafe } from './domain/portal.js';
+import { isActive, risk, injuryProbability } from './domain/portal.js';
 import { CONFIG } from './domain/constants.js';
 import { loadState, saveState, clearState } from './storage.js';
 
@@ -63,7 +63,9 @@ const PRESETS = {
 };
 
 export function createStore(initialState) {
-  let state = initialState ?? loadState() ?? createSeededGame(randomSeed());
+  const loaded = initialState ? { state: initialState, corrupt: false } : loadState();
+  let state = loaded.state ?? createSeededGame(randomSeed());
+  if (!initialState && loaded.corrupt) saveState(state);
   let ui = {
     tab: 'portals',
     pending: {},
@@ -74,6 +76,7 @@ export function createStore(initialState) {
     interval: 30,
     skipWarning: false,
     onboardingOpen: !onboardingSeen(),
+    loadError: loaded.corrupt,
   };
   const listeners = new Set();
   let timer = null;
@@ -138,6 +141,19 @@ export function createStore(initialState) {
     if (!silent) notify();
   }
 
+  // Immediately attempt an action that is not offered normally (e.g. on a
+  // terminal portal). A failed attempt is logged with result: blocked and
+  // surfaced as a toast; state is otherwise untouched.
+  function attemptAction(portalId, actionId, params = {}) {
+    const result = applyAction(state, portalId, actionId, params);
+    if (result.ok) return;
+    state = result.state;
+    ui = { ...ui, toast: { kind: 'warn', message: result.entry.message, duration: 4000 } };
+    saveState(state);
+    scheduleToastClear();
+    notify();
+  }
+
   // Preview reuses the pure action apply on a throwaway copy.
   function preview(portalId) {
     const pending = getPending(portalId);
@@ -171,22 +187,24 @@ export function createStore(initialState) {
       };
     }
 
-    // Transit through an overcharged portal can injure gnomes: show the risk,
-    // not a sampled outcome.
+    // Transit through an overcharged portal can injure gnomes. Show the expected
+    // (deterministic) outcome and the capped injury chance, never a sampled roll.
     if (pending.action === ActionId.SEND_IN || pending.action === ActionId.SEND_OUT) {
-      const safe = coefficientSafe(baseline);
       const amount = Number(pending.params?.amount ?? 0);
-      if (baseline.coefficient > safe && amount > 0) {
-        const probability = CONFIG.INJURY_RATE * (baseline.coefficient - safe);
-        const expected = Math.round(amount * (1 - probability));
+      const probability = injuryProbability(baseline);
+      if (probability > 0 && amount > 0) {
+        const arrived = amount - Math.round(amount * probability);
+        const after = pending.action === ActionId.SEND_IN
+          ? { ...energized, gnomes: energized.gnomes + arrived }
+          : { ...energized, gnomes: energized.gnomes - amount };
         return {
           before: baseline,
-          after: energized,
+          after,
           riskBefore: risk(baseline),
-          riskAfter: risk(energized),
+          riskAfter: risk(after),
           poolBefore,
           poolAfter,
-          note: `Риск травм в переходе: ${Math.round(probability * 100)}% на гнома (ожидается ~${expected} из ${amount}).`,
+          note: `Риск травм в переходе: ${Math.round(probability * 100)}% на гнома (ожидается ~${arrived} из ${amount}).`,
         };
       }
     }
@@ -402,6 +420,11 @@ export function createStore(initialState) {
     notify();
   }
 
+  function dismissLoadError() {
+    ui = { ...ui, loadError: false };
+    notify();
+  }
+
   function showToast(message, kind = 'info', opts = {}) {
     ui = { ...ui, toast: { message, kind, ...opts } };
     scheduleToastClear();
@@ -467,6 +490,7 @@ export function createStore(initialState) {
     preview,
     selectAction,
     selectEnergize,
+    attemptAction,
     advanceTurn,
     confirmAdvance,
     cancelAdvance,
@@ -477,6 +501,7 @@ export function createStore(initialState) {
     openDetail,
     closeDetail,
     dismissToast,
+    dismissLoadError,
     showToast,
     openOnboarding,
     closeOnboarding,

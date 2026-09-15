@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createRng, nextRandom, randInt } from '../src/domain/rng.js';
+import { createRng, nextRandom, randInt, chance } from '../src/domain/rng.js';
 
 test('same seed produces the same sequence', () => {
   let a = createRng(42);
@@ -27,4 +27,11 @@ test('randInt stays within inclusive bounds', () => {
     assert.ok(roll.value >= 3 && roll.value <= 9);
     rng = roll.rng;
   }
+});
+
+test('chance clamps out-of-range probabilities', () => {
+  assert.equal(chance(createRng(1), 1.5).value, true);
+  assert.equal(chance(createRng(1), 1).value, true);
+  assert.equal(chance(createRng(1), 0).value, false);
+  assert.equal(chance(createRng(1), -0.5).value, false);
 });

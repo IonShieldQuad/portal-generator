@@ -15,6 +15,7 @@ export function createPortal(overrides = {}) {
     stability: clamp(overrides.stability ?? 60, 0, CONFIG.STABILITY_MAX),
     reserves: clamp(overrides.reserves ?? 60, 0, CONFIG.RESERVES_MAX),
     gnomes: Math.max(0, Math.trunc(overrides.gnomes ?? 0)),
+    gnomesLost: Math.max(0, Math.trunc(overrides.gnomesLost ?? 0)),
     assistant: overrides.assistant ?? false,
     decayBuffTurns: Math.max(0, Math.trunc(overrides.decayBuffTurns ?? 0)),
     status: overrides.status ?? 'open',
@@ -126,6 +127,14 @@ export function riskBreakdown(portal) {
 
 export function risk(portal) {
   return riskBreakdown(portal).risk;
+}
+
+// Chance for a single gnome to be lost while transiting an overcharged portal.
+// Scales with how far the coefficient exceeds the safe value, capped at 1 (100%).
+export function injuryProbability(portal) {
+  const over = portal.coefficient - coefficientSafe(portal);
+  if (over <= 0) return 0;
+  return Math.min(1, CONFIG.INJURY_RATE * over);
 }
 
 export function recommendedAction(portal) {

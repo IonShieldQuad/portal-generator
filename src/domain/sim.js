@@ -43,6 +43,7 @@ export function resolveTurn(state) {
           ...portal,
           status: 'collapsed',
           gnomes: 0,
+          gnomesLost: stranded,
           reserves: 0,
           assistant: false,
           actionUsed: true,

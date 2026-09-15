@@ -10,7 +10,7 @@ import {
   throughput,
   risk,
   riskBand,
-  coefficientSafe,
+  injuryProbability,
 } from './portal.js';
 
 export const ActionId = Object.freeze({
@@ -162,9 +162,8 @@ const unassignAssistant = {
 
 // Gnomes are only hurt while passing through an overcharged portal.
 function rollTransitInjuries(amount, portal, rng) {
-  const safe = coefficientSafe(portal);
-  if (portal.coefficient <= safe || amount <= 0) return { injured: 0, rng };
-  const probability = CONFIG.INJURY_RATE * (portal.coefficient - safe);
+  const probability = injuryProbability(portal);
+  if (probability <= 0 || amount <= 0) return { injured: 0, rng };
   let r = rng;
   let injured = 0;
   for (let i = 0; i < amount; i += 1) {
@@ -275,6 +274,7 @@ const close = {
       ...p,
       status: 'closed',
       gnomes: 0,
+      gnomesLost: stranded,
       reserves: 0,
       assistant: false,
       actionUsed: true,

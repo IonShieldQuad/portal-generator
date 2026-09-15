@@ -198,11 +198,12 @@ export function actionButton(portalId, actionId, label, options = {}) {
     params = null,
     variant = '',
     tooltip = '',
+    attempt = false,
   } = options;
   const classes = ['act', variant, selected ? 'selected' : ''].filter(Boolean).join(' ');
   const attrs = [
     `class="${classes}"`,
-    `data-act="select-action"`,
+    `data-act="${attempt ? 'attempt' : 'select-action'}"`,
     `data-portal="${portalId}"`,
     `data-action="${actionId}"`,
   ];
